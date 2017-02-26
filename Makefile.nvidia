@@ -1,8 +1,14 @@
-VERSION=<>
+#VERSION=<>
+VERSION=dgx-0.33
+BUILD_DATE=$(shell date +%Y-%m-%dT%H:%M:%S%z)
 ARCH='all'
 
 
 .PHONY: all deb
+
+binary:
+	@ go build -o docker-volume-netshare -ldflags='-X main.VERSION=$(VERSION) -X main.BUILD_DATE=$(BUILD_DATE)' main.go
+	@ echo "done building..."
 
 deb:
 	@ mkdir -p build

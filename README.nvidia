@@ -7,7 +7,7 @@ source ./setup_gopaths.sh
 git checkout nvidia-master
 
 3. Build binary:
-go build
+make -f Makefile.nvidia binary
 
 4. Build debian:
 make -f Makefile.nvidia deb
