@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/ContainX/docker-volume-netshare/netshare"
+	"docker-volume-netshare/netshare"
 )
 
 var VERSION string = ""
