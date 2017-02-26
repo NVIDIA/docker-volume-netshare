@@ -1,0 +1,21 @@
+VERSION=<>
+ARCH='all'
+
+
+.PHONY: all deb
+
+deb:
+	@ mkdir -p build
+	@ rm -rf build/*.deb
+	@ cp docker-volume-netshare pkg/usr/bin/docker-volume-netshare
+	@ dpkg-deb --build pkg
+	@ mv pkg.deb build/docker-volume-netshare.deb
+	@ echo "done..."
+
+deb_auto: deb
+	@ mv build/docker-volume-netshare.deb build/docker-volume-netshare_$(VERSION)_$(ARCH).deb
+	@ echo "done..."
+
+debr: deb
+	@ reprepro -b ~/github/cosmos-repos includedeb trusty build/docker-volume-netshare.deb
+
