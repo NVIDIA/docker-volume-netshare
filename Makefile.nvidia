@@ -10,7 +10,7 @@ binary:
 	@ go build -o docker-volume-netshare -ldflags='-X main.VERSION=$(VERSION) -X main.BUILD_DATE=$(BUILD_DATE)' main.go
 	@ echo "done building..."
 
-deb:
+deb: binary
 	@ mkdir -p build
 	@ rm -rf build/*.deb
 	@ cp docker-volume-netshare pkg/usr/bin/docker-volume-netshare
