@@ -1,5 +1,5 @@
 #VERSION=<>
-VERSION=dgx-0.33-1
+VERSION=$(shell grep Version pkg/DEBIAN/control | sed "s/Version: //g")
 BUILD_DATE=$(shell date +%Y-%m-%dT%H:%M:%S%z)
 ARCH='all'
 
