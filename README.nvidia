@@ -11,3 +11,6 @@ make -f Makefile.nvidia binary
 
 4. Build debian:
 make -f Makefile.nvidia deb
+
+5. For automated build to trigger, you will need to edit the version info in the file in the cosmos repo as well:
+/cosmos/custom-OSS/custom-docker-volume-netshare.yml
