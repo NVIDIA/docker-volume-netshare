@@ -1,16 +1,23 @@
 To build nvidia's custom docker-volume-netshare driver, do the following:
 
-1. One time only - should get added to saltstack setup:
-source ./setup_gopaths.sh
-
-2. Switch to nvidia-master branch:
+1. Switch to nvidia-master branch:
 git checkout nvidia-master
 
-3. Build binary:
+2. Build binary:
 make -f Makefile.nvidia binary
 
-4. Build debian:
+
+To build the debian:
 make -f Makefile.nvidia deb
 
-5. For automated build to trigger, you will need to edit the version info in the file in the cosmos repo as well:
+
+To check in changes and automatically test and promote, you will need to do the following:
+1. Update version info in pkg/DEBIAN/control
+
+2. Push your changes to the remote repo in nvidia-master branch
+
+3. Wait for automated Jenkins build to complete:
+http://grid-devops-jenkins.nvidia.com/view/DGX-Appliance/view/Appliance-Overview/job/DGX-Build-Custom-Docker-Volume-Netshare/
+
+4. Update version info in file below (in the cosmos repo) to match that in control file and open a new pull request.
 /cosmos/custom-OSS/custom-docker-volume-netshare.yml
