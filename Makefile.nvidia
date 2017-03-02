@@ -1,8 +1,11 @@
 #VERSION=<>
-VERSION=dgx-0.33
+VERSION=dgx-0.33-1
 BUILD_DATE=$(shell date +%Y-%m-%dT%H:%M:%S%z)
 ARCH='all'
 
+export GOPATH := $(HOME)/go
+export PATH := $(GOROOT)/bin:$(GOPATH)/bin:$(PATH)
+export GOPATH := $(GOPATH):$(PWD)
 
 .PHONY: all deb
 
