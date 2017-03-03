@@ -2,7 +2,7 @@ Package: docker-volume-netshare
 Priority: extra
 Maintainer: Jeremy Unruh (https://github.com/gondor) <example@example.org>
 Section: devel
-Version: 0.33-dgx-3
+Version: 0.33-dgx-4
 Architecture: all
 Description: Docker Volume Plugin - Netshare
 
