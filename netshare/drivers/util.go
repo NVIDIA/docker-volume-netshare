@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+        "regexp"
 )
 
 const (
@@ -61,7 +62,7 @@ func mountpoint(elem ...string) string {
 }
 
 func run(cmd string) error {
-	if out, err := exec.Command("sh", "-c", cmd).CombinedOutput(); err != nil {
+        if out, err := exec.Command("sh", "-c", cmd).CombinedOutput(); err != nil {
 		log.Println(string(out))
 		return err
 	}
@@ -69,10 +70,22 @@ func run(cmd string) error {
 }
 
 func run_cmd(cmd string) error {
-       if out, err := exec.Command("sh", "-c", cmd).CombinedOutput(); err != nil {
-           log.Println(string(out))
-           return fmt.Errorf(string(out))
-	}
+        if out, err := exec.Command("sh", "-c", cmd).CombinedOutput(); err != nil {
+                regex1 := regexp.MustCompile(".*access denied by server while mounting.*")
+                regex2 := regexp.MustCompile(".*Failed to resolve server.*")
+                regex3 := regexp.MustCompile(".*Device or resource busy.*")
+                var error_string string
+                if error_string = regex1.FindString(string(out)); error_string == "" {
+                        if error_string = regex2.FindString(string(out)); error_string == "" {
+                                if error_string = regex3.FindString(string(out)); error_string == "" {
+                                        log.Println(string(out))
+                                        return err
+                                }    
+                        }  
+                }
+                log.Println(string(out))
+                return fmt.Errorf(string(out))
+        }
         return nil
 }
 
