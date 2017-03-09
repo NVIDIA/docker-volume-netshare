@@ -8,7 +8,7 @@
 #
 
 ## NFS
-DKV_NETSHARE_OPTS="nfs -v 3 -o nfsvers=3,fsc,noatime,hard,intr,proto=tcp,timeo=600,retrans=10,sec=sys"
+DKV_NETSHARE_OPTS="nfs -v 3 --verbose=true -o nfsvers=3,fsc,noatime,hard,intr,proto=tcp,timeo=600,retrans=10,sec=sys"
 
 ## EFS
 #DKV_NETSHARE_OPTS="efs --nameserver=169.254.169.253"

@@ -113,7 +113,7 @@ func (n nfsDriver) Unmount(r volume.UnmountRequest) volume.Response {
 
 	log.Infof("Unmounting volume name %s from %s", resolvedName, hostdir)
 
-	if err := run(fmt.Sprintf("umount %s", hostdir)); err != nil {
+	if err := run_cmd(fmt.Sprintf("umount %s", hostdir)); err != nil {
 		log.Errorf("Error unmounting volume from host: %s", err.Error())
 		return volume.Response{Err: err.Error()}
 	}
@@ -170,5 +170,5 @@ func (n nfsDriver) mountVolume(name, source, dest string, version int) error {
 		}
 	}
 	log.Debugf("exec: %s\n", cmd)
-	return run(cmd)
+	return run_cmd(cmd)
 }

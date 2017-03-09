@@ -68,8 +68,17 @@ func run(cmd string) error {
 	return nil
 }
 
+func run_cmd(cmd string) error {
+       if out, err := exec.Command("sh", "-c", cmd).CombinedOutput(); err != nil {
+           log.Println(string(out))
+           return fmt.Errorf(string(out))
+	}
+        return nil
+}
+
+
 func merge(src, src2 map[string]string) map[string]string {
-	if len(src) == 0 && len(src2) == 0 {
+        if len(src) == 0 && len(src2) == 0 {
 		return EmptyMap
 	}
 
