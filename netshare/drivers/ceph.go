@@ -4,7 +4,9 @@ import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/docker/go-plugins-helpers/volume"
+	"io/ioutil"
 	"os"
+	"errors"
 	"strings"
 )
 
@@ -38,6 +40,7 @@ func NewCephDriver(root string, username string, password string, context string
 		localmount:   localmount,
 		cephopts:     map[string]string{},
 	}
+
 	if len(cephopts) > 0 {
 		d.cephopts[CephOptions] = cephopts
 	}
@@ -109,6 +112,28 @@ func (n cephDriver) fixSource(name, id string) string {
 	return strings.Join(source, "/")
 }
 
+// read secret key from the specified file
+func (n cephDriver) readSecretFile(secretFile string) string {
+	data, err := ioutil.ReadFile(secretFile)
+	if err != nil {
+		log.Infof("readSecretFile: failed to read file: %s", secretFile)
+	}
+
+	return string(data)
+}
+
+
+// Function Name: mountVolume
+//
+// A ceph volume can be mounted in couple ways:
+// i) starting docker-volume-netshare with secret passed in when started
+// ii) starting docker-volume-netshare without secret
+//	creating a volume with secret options.
+//	For this to work, the expected syntax for passing optional parameters is:
+//	 --opt addr=<addr> --opt name=<name> --opt secret=<secretKey> --opt device=:<mountPath> \
+//		[--opt secretfile=<filename>] [--opt port=<cephPort>]
+//	Note: If port is not specified, default value of 6789 is assumed.
+//		Either secret or secretfile option must be specified.
 func (n cephDriver) mountVolume(name, source, dest string) error {
 	var cmd string
 
@@ -121,14 +146,51 @@ func (n cephDriver) mountVolume(name, source, dest string) error {
 
 	mountCmd := "mount"
 
-	if log.GetLevel() == log.DebugLevel {
-		mountCmd = mountCmd + " -t ceph"
+	username := ""
+	if len(options["name"]) != 0 {
+		username = "name=" + options["name"]
+	} else {
+		username = n.username
+	}
+
+	if (len(options["secretfile"]) != 0  && len(options["secret"]) != 0) {
+		return errors.New("Cannot pass secret and secretfile options together")
+	}
+
+	passwd := n.password
+	if len(options["secretfile"]) != 0 {
+		passwd = "secret=" + n.readSecretFile(options["secretfile"])
+	}
+
+	if len(options["secret"]) != 0 {
+		passwd = "secret=" + options["secret"]
+	}
+
+	cephPort := ""
+	if len(options["port"]) != 0 {
+		cephPort = ":" + options["port"]
+	} else {
+		cephPort = ":6789"
+	}
+
+	srcDir := ""
+	if len(options["addr"]) != 0 {
+		srcDir = options["addr"] + cephPort + options["device"]
+	} else {
+		srcDir = source
 	}
 
 	//cmd = fmt.Sprintf("%s -t ceph %s:%s:/ -o %s,%s,%s %s %s", mountCmd, n.cephmount, n.cephport, n.context, n.username, n.password, opts, dest)
-	cmd = fmt.Sprintf("%s -t ceph %s -o %s,%s,%s %s %s", mountCmd, source, n.context, n.username, n.password, opts, dest)
+	// This add -t ceph twice for some reason which is actually harmless
+	if log.GetLevel() == log.DebugLevel {
+		mountCmd = mountCmd + " -t ceph"
+		cmd = fmt.Sprintf("%s %s -o \"%s,%s,%s %s\" %s", mountCmd, srcDir, n.context, username, passwd, opts, dest)
+	} else {
+		cmd = fmt.Sprintf("%s -t ceph %s -o \"%s,%s,%s\" %s %s", mountCmd, srcDir, n.context, username, passwd, opts, dest)
+	}
 
-	log.Debugf("exec: %s\n", strings.Replace(cmd, ","+n.password, ",****", 1))
+	log.Debugf("exec: %s\n", strings.Replace(cmd, ","+passwd, ",****", 1))
+
 	return run(cmd)
 }
 
