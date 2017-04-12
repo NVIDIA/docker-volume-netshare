@@ -175,7 +175,18 @@ func (n cephDriver) mountVolume(name, source, dest string) error {
 
 	srcDir := ""
 	if len(options["addr"]) != 0 {
-		srcDir = options["addr"] + cephPort + options["device"]
+		// Ceph Source IP addresses: can be comma separated list
+		//	[IP_Address][,IP_Address]+
+		// The mount should look like this:
+		//	addr1:6789[,addrN:6789]
+		addrList := strings.Split(options["addr"], ",")
+		for k := 0; k < len (addrList); k++ {
+			srcDir += addrList[k] + cephPort
+			if (k +1) < len(addrList) {
+				srcDir += ","
+			}
+		}
+		srcDir += options["device"]
 	} else {
 		srcDir = source
 	}
