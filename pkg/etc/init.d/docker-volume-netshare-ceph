@@ -13,15 +13,15 @@ set -e
 
 export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
 
-BASE=$(basename $0)
+BASE=docker-volume-netshare
 
 # modify these in /etc/default/$BASE (/etc/default/dkv-netshare)
 DKV_NETSHARE=/usr/bin/$BASE
 # This is the pid file created/managed by start-stop-daemon
-DKV_NETSHARE_SSD_PIDFILE=/var/run/$BASE-ssd.pid
-DKV_NETSHARE_LOGFILE=/var/log/$BASE.log
-DKV_NETSHARE_OPTS=
-DKV_NETSHARE_DESC="Docker-Volume-Netshare"
+DKV_NETSHARE_SSD_PIDFILE=/var/run/$BASE-ceph-ssd.pid
+DKV_NETSHARE_LOGFILE=/var/log/$BASE-ceph.log
+DKV_NETSHARE_CEPH_OPTS=
+DKV_NETSHARE_DESC="Docker-Volume-Netshare-Ceph"
 
 # Get lsb functions
 . /lib/lsb/init-functions
@@ -58,7 +58,7 @@ case "$1" in
 			--pidfile "$DKV_NETSHARE_SSD_PIDFILE" \
 			--make-pidfile \
 			-- \
-				$DKV_NETSHARE_OPTS \
+				$DKV_NETSHARE_CEPH_OPTS \
 					>> "$DKV_NETSHARE_LOGFILE" 2>&1
 		log_end_msg $?
 		;;
