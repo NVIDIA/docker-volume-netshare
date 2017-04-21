@@ -4,8 +4,11 @@ import (
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/docker/go-plugins-helpers/volume"
-	//"os"
+	"os"
 	"path/filepath"
+	"strings"
+	"strconv"
+	"bufio"
 )
 
 const (
@@ -33,6 +36,38 @@ func NewNFSDriver(root string, version int, nfsopts string) nfsDriver {
 	if len(nfsopts) > 0 {
 		d.nfsopts[NfsOptions] = nfsopts
 	}
+
+	// Run external cosmos script to build a list of all volumes currently referenced
+	// by running jobs.
+	command := "/usr/sbin/cosmos/build_volume_refs.sh"
+	if err := run(command); err != nil {
+		// Parse the resulting file and add the listed refs to our reference map
+		file, err := os.Open("/tmp/docker-volume-refs")
+		if err == nil {
+			defer file.Close()
+			scanner := bufio.NewScanner(file)
+			// Read each line of the refs file
+			for scanner.Scan() {
+				// Split the line into two parts
+				splitstr := strings.Split(scanner.Text(), " ")
+				if len(splitstr) == 2 {
+					refs, _ := strconv.Atoi(splitstr[1])
+					if (refs > 0) {
+						log.Infof("Found existing volume in use with %d references: %s", refs, splitstr[0])
+						for i := 0; i < refs; i++ {
+							hostdir := mountpoint(d.root, splitstr[0])
+							d.mountm.Add(splitstr[0], hostdir)
+						}
+					}
+				} else {
+					log.Errorf("Error parsing reference file line: %s", scanner.Text())
+				}
+			}
+		}
+	} else {
+		log.Errorf("Error executing script: %s", command)
+	} 	
+
 	return d
 }
 
