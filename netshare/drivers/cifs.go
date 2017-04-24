@@ -51,6 +51,10 @@ func NewCIFSDriver(root string, creds *CifsCreds, netrc, cifsopts string) cifsDr
 	if len(cifsopts) > 0 {
 		d.cifsopts[CifsOpts] = cifsopts
 	}
+
+        // Rebuild any existing volume references
+        d.mountm.BuildReferences(root, CIFS.String())
+
 	return d
 }
 

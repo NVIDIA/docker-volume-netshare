@@ -45,6 +45,9 @@ func NewCephDriver(root string, username string, password string, context string
 		d.cephopts[CephOptions] = cephopts
 	}
 
+        // Rebuild any existing volume references
+        d.mountm.BuildReferences(root, CEPH.String())
+
 	return d
 }
 

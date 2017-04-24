@@ -5,6 +5,9 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/docker/go-plugins-helpers/volume"
 	"strings"
+	"os"
+	"strconv"
+	"bufio"
 )
 
 const (
@@ -155,4 +158,40 @@ func (m *mountManager) GetVolumes(rootPath string) []*volume.Volume {
 		volumes = append(volumes, &volume.Volume{Name: mount.name, Mountpoint: mount.hostdir})
 	}
 	return volumes
+}
+
+// This method uses an external script to determine which volumes are currently mounted.
+// Used at startup time to build mount map.
+func (m *mountManager) BuildReferences(rootPath string, driverType string) error {
+	command := "/usr/sbin/cosmos/build_volume_refs.sh " + driverType + " " + rootPath
+	if err := run(command); err != nil {
+		// Parse the resulting file and add the listed refs to our reference map
+		file, err := os.Open("/tmp/docker-volume-refs")
+		if err == nil {
+			defer file.Close()
+			scanner := bufio.NewScanner(file)
+			// Read each line of the refs file
+			for scanner.Scan() {
+				// Split the line into two parts
+				splitstr := strings.Split(scanner.Text(), " ")
+				if len(splitstr) == 2 {
+					refs, _ := strconv.Atoi(splitstr[1])
+					if (refs > 0) {
+						log.Infof("Found existing volume in use with %d references: %s", refs, splitstr[0])
+						for i := 0; i < refs; i++ {
+							hostdir := mountpoint(rootPath, splitstr[0])
+							m.Add(splitstr[0], hostdir)
+						}
+					}
+				} else {
+					log.Errorf("Error parsing reference file line: %s", scanner.Text())
+					return errors.New("Error parsing reference file line: " + scanner.Text())
+				}
+			}
+		}
+	} else {
+		log.Errorf("Error executing script: %s", command)
+		return errors.New("Error executing command: " + command)
+	}
+	return nil
 }

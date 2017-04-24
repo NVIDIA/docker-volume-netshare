@@ -42,6 +42,8 @@ func NewEFSDriver(root, az, nameserver string, resolve bool) efsDriver {
 	if az == "" {
 		d.availzone = md.AvailZone
 	}
+        // Rebuild any existing volume references
+        d.mountm.BuildReferences(root, EFS.String())
 	return d
 }
 
