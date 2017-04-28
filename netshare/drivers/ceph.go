@@ -51,17 +51,35 @@ func NewCephDriver(root string, username string, password string, context string
 	return d
 }
 
+func (n cephDriver) IsKeyPresent(keyName string) int {
+	ret, keyval := keyctl_search("ceph", keyName)
+	if ret != 0 {
+		log.Debugf("Returned value = %d for key name: %s, value = %d", keyval, keyName, ret)
+	}
+	return ret
+}
+
+func (n cephDriver) UnlinkKey(keyName string) {
+	ret, keyval := keyctl_search("ceph", keyName)
+	if ret != 0 {
+		keyctl_unlink(keyval)
+	}
+}
+
 func (n cephDriver) Mount(r volume.MountRequest) volume.Response {
 	log.Debugf("Entering Mount: %v", r)
 	n.m.Lock()
 	defer n.m.Unlock()
 	hostdir := mountpoint(n.root, r.Name)
 	source := n.fixSource(r.Name, r.ID)
+
 	if n.mountm.HasMount(r.Name) && n.mountm.Count(r.Name) > 0 {
 		log.Infof("Using existing CEPH volume mount: %s", hostdir)
 		n.mountm.Increment(r.Name)
 		return volume.Response{Mountpoint: hostdir}
 	}
+
+	n.mountm.Add(r.Name, hostdir)
 
 	log.Infof("Mounting CEPH volume %s on %s", source, hostdir)
 	if err := createDest(hostdir); err != nil {
@@ -71,7 +89,6 @@ func (n cephDriver) Mount(r volume.MountRequest) volume.Response {
 	if err := n.mountVolume(r.Name, source, hostdir); err != nil {
 		return volume.Response{Err: err.Error()}
 	}
-	n.mountm.Add(r.Name, hostdir)
 	return volume.Response{Mountpoint: hostdir}
 }
 
@@ -98,6 +115,8 @@ func (n cephDriver) Unmount(r volume.UnmountRequest) volume.Response {
 	}
 
 	n.mountm.DeleteIfNotManaged(r.Name)
+
+	n.UnlinkKey("client.cephFS");
 
 	if err := os.RemoveAll(hostdir); err != nil {
 		return volume.Response{Err: err.Error()}
