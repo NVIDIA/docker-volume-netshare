@@ -6,8 +6,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
-        "regexp"
 )
 
 const (
@@ -19,9 +19,11 @@ func createDest(dest string) error {
 
 	if os.IsNotExist(err) {
 		if err := os.MkdirAll(dest, 0755); err != nil {
+			return fmt.Errorf("mkdir failed for %v with error: '%s'", dest, err.Error())
 			return err
 		}
 	} else if err != nil {
+		return fmt.Errorf("lstat failed for %v with error: '%s'", dest, err.Error())
 		return err
 	}
 
@@ -62,7 +64,7 @@ func mountpoint(elem ...string) string {
 }
 
 func run(cmd string) error {
-        if out, err := exec.Command("sh", "-c", cmd).CombinedOutput(); err != nil {
+	if out, err := exec.Command("sh", "-c", cmd).CombinedOutput(); err != nil {
 		log.Println(string(out))
 		return err
 	}
@@ -70,28 +72,27 @@ func run(cmd string) error {
 }
 
 func run_cmd(cmd string) error {
-        if out, err := exec.Command("sh", "-c", cmd).CombinedOutput(); err != nil {
-                regex1 := regexp.MustCompile(".*access denied by server while mounting.*")
-                regex2 := regexp.MustCompile(".*Failed to resolve server.*")
-                regex3 := regexp.MustCompile(".*Device or resource busy.*")
-                var error_string string
-                if error_string = regex1.FindString(string(out)); error_string == "" {
-                        if error_string = regex2.FindString(string(out)); error_string == "" {
-                                if error_string = regex3.FindString(string(out)); error_string == "" {
-                                        log.Println(string(out))
-                                        return err
-                                }    
-                        }  
-                }
-                log.Println(string(out))
-                return fmt.Errorf(string(out))
-        }
-        return nil
+	if out, err := exec.Command("sh", "-c", cmd).CombinedOutput(); err != nil {
+		regex1 := regexp.MustCompile(".*access denied by server while mounting.*")
+		regex2 := regexp.MustCompile(".*Failed to resolve server.*")
+		regex3 := regexp.MustCompile(".*Device or resource busy.*")
+		var error_string string
+		if error_string = regex1.FindString(string(out)); error_string == "" {
+			if error_string = regex2.FindString(string(out)); error_string == "" {
+				if error_string = regex3.FindString(string(out)); error_string == "" {
+					log.Println(string(out))
+					return err
+				}
+			}
+		}
+		log.Println(string(out))
+		return fmt.Errorf(string(out))
+	}
+	return nil
 }
 
-
 func merge(src, src2 map[string]string) map[string]string {
-        if len(src) == 0 && len(src2) == 0 {
+	if len(src) == 0 && len(src2) == 0 {
 		return EmptyMap
 	}
 

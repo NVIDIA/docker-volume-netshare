@@ -56,7 +56,7 @@ func (n nfsDriver) Mount(r volume.MountRequest) volume.Response {
 
 	if n.mountm.HasMount(resolvedName) && n.mountm.Count(resolvedName) > 0 {
 		log.Infof("Using existing NFS volume mount: %s", hostdir)
-		if err := run(fmt.Sprintf("grep -c %s /proc/mounts", hostdir)); err != nil {
+		if err := run(fmt.Sprintf("grep -c '%s ' /proc/mounts", hostdir)); err != nil {
 			log.Infof("Existing NFS volume not mounted, force remount.")
 		} else {
 			n.mountm.Increment(resolvedName)
@@ -66,17 +66,24 @@ func (n nfsDriver) Mount(r volume.MountRequest) volume.Response {
 
 	log.Infof("Mounting NFS volume %s on %s", source, hostdir)
 
-	if err := createDest(hostdir); err != nil {
-		return volume.Response{Err: err.Error()}
-	}
-
 	if n.mountm.HasMount(resolvedName) == false {
 		n.mountm.Create(resolvedName, hostdir, resOpts)
 	}
 
 	n.mountm.Add(resolvedName, hostdir)
 
+	if err := run(fmt.Sprintf("grep -c '%s ' /proc/mounts", hostdir)); err == nil {
+		log.Warnf("NFS volume already mounted but not in mount map, returning existing mount.")
+		return volume.Response{Mountpoint: hostdir}
+	}
+
+	if err := createDest(hostdir); err != nil {
+		log.Errorf("createDest failed with error: %s", err.Error())
+		return volume.Response{Err: err.Error()}
+	}
+
 	if err := n.mountVolume(resolvedName, source, hostdir, n.version); err != nil {
+		log.Errorf("mountVolume failed with error: %s", err.Error())
 		return volume.Response{Err: err.Error()}
 	}
 
