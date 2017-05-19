@@ -1,8 +1,8 @@
 package netshare
 
 import (
-	"fmt"
 	"docker-volume-netshare/netshare/drivers"
+	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/docker/go-plugins-helpers/volume"
 	"github.com/spf13/cobra"

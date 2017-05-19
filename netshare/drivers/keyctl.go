@@ -7,6 +7,7 @@ import (
 )
 
 type keyctlCommand int
+
 const syscall_keyctl uintptr = 250
 const keySpecUserKeyring int32 = -4
 const keyctlUnlink keyctlCommand = 9
@@ -37,9 +38,9 @@ func keyctl(cmd keyctlCommand, args ...uintptr) (r1 int32, r2 int32, err error) 
 
 func keyctl_search(name, keyName string) (result int, keyValue int32) {
 	var (
-		r1	int32
-		b1, b2	*byte
-		err1	error
+		r1     int32
+		b1, b2 *byte
+		err1   error
 	)
 
 	result = 0
@@ -59,7 +60,7 @@ func keyctl_search(name, keyName string) (result int, keyValue int32) {
 	if err1 != nil {
 		log.Debugf("keyctl_search: failed to find key: %s\n", keyName)
 		return
-	} 
+	}
 
 	keyValue = int32(r0)
 	result = 1

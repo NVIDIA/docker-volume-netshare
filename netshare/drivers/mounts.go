@@ -1,13 +1,13 @@
 package drivers
 
 import (
+	"bufio"
 	"errors"
 	log "github.com/Sirupsen/logrus"
 	"github.com/docker/go-plugins-helpers/volume"
-	"strings"
 	"os"
 	"strconv"
-	"bufio"
+	"strings"
 )
 
 const (
@@ -180,7 +180,7 @@ func (m *mountManager) BuildReferences(rootPath string, driverType string) error
 			splitstr := strings.Split(scanner.Text(), " ")
 			if len(splitstr) == 2 {
 				refs, _ := strconv.Atoi(splitstr[1])
-				if (refs > 0) {
+				if refs > 0 {
 					log.Debugf("Found existing volume in use with %d references: %s", refs, splitstr[0])
 					for i := 0; i < refs; i++ {
 						hostdir := mountpoint(rootPath, splitstr[0])

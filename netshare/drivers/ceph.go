@@ -1,12 +1,12 @@
 package drivers
 
 import (
+	"errors"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"github.com/docker/go-plugins-helpers/volume"
 	"io/ioutil"
 	"os"
-	"errors"
 	"strings"
 )
 
@@ -45,8 +45,8 @@ func NewCephDriver(root string, username string, password string, context string
 		d.cephopts[CephOptions] = cephopts
 	}
 
-        // Rebuild any existing volume references
-        d.mountm.BuildReferences(root, CEPH.String())
+	// Rebuild any existing volume references
+	d.mountm.BuildReferences(root, CEPH.String())
 
 	return d
 }
@@ -116,7 +116,7 @@ func (n cephDriver) Unmount(r volume.UnmountRequest) volume.Response {
 
 	n.mountm.DeleteIfNotManaged(r.Name)
 
-	n.UnlinkKey("client.cephFS");
+	n.UnlinkKey("client.cephFS")
 
 	if err := os.RemoveAll(hostdir); err != nil {
 		return volume.Response{Err: err.Error()}
@@ -143,7 +143,6 @@ func (n cephDriver) readSecretFile(secretFile string) string {
 
 	return string(data)
 }
-
 
 // Function Name: mountVolume
 //
@@ -175,7 +174,7 @@ func (n cephDriver) mountVolume(name, source, dest string) error {
 		username = n.username
 	}
 
-	if (len(options["secretfile"]) != 0  && len(options["secret"]) != 0) {
+	if len(options["secretfile"]) != 0 && len(options["secret"]) != 0 {
 		return errors.New("Cannot pass secret and secretfile options together")
 	}
 
@@ -202,9 +201,9 @@ func (n cephDriver) mountVolume(name, source, dest string) error {
 		// The mount should look like this:
 		//	addr1:6789[,addrN:6789]
 		addrList := strings.Split(options["addr"], ",")
-		for k := 0; k < len (addrList); k++ {
+		for k := 0; k < len(addrList); k++ {
 			srcDir += addrList[k] + cephPort
-			if (k +1) < len(addrList) {
+			if (k + 1) < len(addrList) {
 				srcDir += ","
 			}
 		}
