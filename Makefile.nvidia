@@ -3,11 +3,15 @@ VERSION=$(shell grep Version pkg/DEBIAN/control | sed "s/Version: //g")
 BUILD_DATE=$(shell date +%Y-%m-%dT%H:%M:%S%z)
 ARCH='all'
 
-export GOPATH := $(HOME)/go
-export PATH := $(GOROOT)/bin:$(GOPATH)/bin:$(PATH)
 export GOPATH := $(GOPATH):$(PWD)
 
 .PHONY: all deb
+
+all: deps binary
+
+deps:
+	@ echo "Building go dependencies."
+	go get
 
 binary:
 	@ go build -o docker-volume-netshare -ldflags='-X main.VERSION=$(VERSION) -X main.BUILD_DATE=$(BUILD_DATE)' main.go
