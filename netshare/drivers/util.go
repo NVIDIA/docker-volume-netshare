@@ -71,20 +71,27 @@ func run(cmd string) error {
 	return nil
 }
 
-func run_cmd(cmd string) error {
+func run_cmd(cmd, source, dest string) error {
 	if out, err := exec.Command("sh", "-c", cmd).CombinedOutput(); err != nil {
 		regex1 := regexp.MustCompile(".*access denied by server while mounting.*")
 		regex2 := regexp.MustCompile(".*Failed to resolve server.*")
 		regex3 := regexp.MustCompile(".*Device or resource busy.*")
+		regex4 := regexp.MustCompile(".*Connection timed out*")
+
 		var error_string string
-		if error_string = regex1.FindString(string(out)); error_string == "" {
-			if error_string = regex2.FindString(string(out)); error_string == "" {
-				if error_string = regex3.FindString(string(out)); error_string == "" {
-					log.Println(string(out))
-					return err
-				}
-			}
+		if error_string = regex1.FindString(string(out)); error_string != "" && source != "" {
+			out = []byte("Source=" + source + " : Reason=" + "Access denied by server while mounting.")
+		} else if error_string = regex2.FindString(string(out)); error_string != "" && source != "" {
+			out = []byte("Source=" + source + " : Reason=" + "Failed to resolve server.")
+		} else if error_string = regex3.FindString(string(out)); error_string != "" && source != "" {
+			out = []byte("Source=" + source + " : Reason=" + "Device or resource busy.")
+		} else if error_string = regex4.FindString(string(out)); error_string != "" && source != "" {
+			out = []byte("Source=" + source + " : Reason=" + "Connection timed out.")
+		} else {
+			log.Println(string(out))
+			return err
 		}
+
 		log.Println(string(out))
 		return fmt.Errorf(string(out))
 	}
